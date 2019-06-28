@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mon.project.model.welcomeDBDemo.dao.WelcomeDBDao">
+
+    <select id="findWelcomeDB" resultType="java.lang.Integer" >
+        select 1 from dual
+    </select>
+
+   <!-- <insert id="insertArticle" parameterType="com.example.modules.JdbcTemplate.entity.Article" >
+        INSERT INTO article
+        (
+        id,
+        title,
+        summary,
+        status,
+        type,
+        userId
+        )
+        VALUES
+        (
+        #{id},
+        #{title},
+        #{summary},
+        #{status},
+        #{type},
+        #{userId}
+        )
+    </insert>
+
+    <update id="updateArticle" parameterType="com.example.modules.JdbcTemplate.entity.Article">
+        update article
+        <set>
+            <if test="id != null">id = #{id},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="userId != null">userId = #{userId},</if>
+        </set>
+        where userId = #{userId}
+    </update>-->
+
+</mapper>

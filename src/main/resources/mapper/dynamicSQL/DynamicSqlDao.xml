@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mon.project.model.dynamicSQL.dao.DynamicSqlDao">
+
+    <resultMap type ="java.util.HashMap" id= "cursorMap">
+        <!--因为过程中已经对返回值前后加 "(双引号)进行了防止大写处理,所以此处resultMap可不写映射-->
+    </resultMap >
+    <select id="findByDynamicSql" statementType="CALLABLE" parameterType="java.util.HashMap" >
+        {call pkg_querySql.querySqls(#{tableName, jdbcType=VARCHAR, mode=IN},
+        #{return_cursor, mode=OUT, jdbcType=CURSOR,javaType=ResultSet,resultMap=cursorMap})}
+    </select>
+
+
+</mapper>

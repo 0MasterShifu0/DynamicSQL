@@ -1,0 +1,37 @@
+server:
+      address: 0.0.0.0
+      port: 10001
+      sessionTimeout: 3600
+
+# 静态资源配置 默认值为 /**
+spring.mvc.static-path-pattern: /static/**
+# 默认值为 classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/
+spring.resources.static-locations: classpath:/static/
+# 开发环境中关闭缓存便于测试
+spring.thymeleaf.cache: false
+spring.thymeleaf.mode : LEGACYHTML5
+
+# 数据源、视图配置
+
+spring:
+  datasource:
+    name: oracle
+#    continue-on-error: true
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@localhost:1521:XE
+    username: system
+    password: 1234
+    ConnectionTestQuery: SELECT 1
+    #连接池的配置信息
+    initialSize: 10
+    minIdle: 10
+    maxActive: 100
+    maxWait: 60000
+
+
+
+# mybatis XML映射配置
+mybatis:
+  config-locations: mybatis/mybatis-config.xml
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.mon.project.model.*.vo

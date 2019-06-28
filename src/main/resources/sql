@@ -1,0 +1,132 @@
+2.1 创建包头
+
+create or replace
+package pkg_querySql
+as
+type cursorRef is ref cursor;
+procedure querySqls(p_table VARCHAR2,cursor_ref out cursorRef);
+end pkg_querySql;
+--代码解析:
+
+--包头中定义了一个过程,入参是 要查询的表名 p_table , cursor_ref是定义的一个游标,存储查询表的数据,可以是多条既存储 List
+
+2.2创建包体
+
+create or replace
+package body pkg_querySql
+is
+procedure querySqls(p_table VARCHAR2,cursor_ref out cursorRef)
+AS
+  v_column VARCHAR2(50);   --存储待拼接的数据库字段名
+  v_mappName VARCHAR2 (50); --存储映射xml字段的名称
+  v_dataType VARCHAR2 (50);  --存储该字段数据库字段类型
+  v_sqlStmt VARCHAR2(5000); --存储拼接的临时查询sql
+BEGIN
+    OPEN cursor_ref FOR --打开动态游标
+		'SELECT column_name ,lower(column_name),data_type from User_Tab_Columns WHERE table_name = upper(''' ||p_table || ''' )';
+ LOOP
+	FETCH cursor_ref INTO v_column, v_mappName,v_dataType ; 	--循环提取游标数据
+	EXIT WHEN cursor_ref%NOTFOUND; 			--没有数据时退出循环
+  IF v_dataType = 'DATE' THEN --如果是日期格式
+   v_column := 'to_char(' || v_column || ',''YYYY-MM-DD HH24:MI:SS'')';
+  END IF;
+  IF v_sqlStmt IS NULL THEN  --动态拼接sql
+    v_sqlStmt := v_column || ' AS "' || v_mappName || '" ';
+ ELSE
+    v_sqlStmt := v_sqlStmt || ' ,' || v_column || ' AS "' || v_mappName || '" ';
+  END IF;
+END LOOP;
+CLOSE cursor_ref;		--关闭游标变量
+
+v_sqlStmt := 'SELECT '|| v_sqlStmt || ' FROM ' || p_table;
+DBMS_OUTPUT.PUT_LINE ('查询sql：' ||  v_sqlStmt);
+open cursor_ref for --打开动态游标存储查询数据
+	v_sqlStmt;
+EXCEPTION
+	WHEN OTHERS THEN
+		IF cursor_ref%FOUND THEN 	--如果出现异常，游标变量未关闭
+			CLOSE cursor_ref;		 --关闭游标
+		END IF;
+		DBMS_OUTPUT.PUT_LINE ('ERROR: ' ||
+			SUBSTR(SQLERRM, 1, 200));
+end querySqls;
+end pkg_querySql;
+--代码解析:
+
+   1.  'SELECT column_name ,lower(column_name),data_type from User_Tab_Columns WHERE table_name = upper(''' ||p_table || ''' )';
+--通过p_table 传入需要查询的表查询User_Tab_Columns 中的映射字段
+
+2. FETCH cursor_ref INTO v_column, v_mappName,v_dataType ; 	--循环提取游标数据
+--一次移动一个游标位置,将一个游标中的三个数据一次性装入后面的三个定义字段中
+
+3.  IF v_dataType = 'DATE' THEN --如果是日期格式
+       v_column := 'to_char(' || v_column || ',''YYYY-MM-DD HH24:MI:SS'')';
+      END IF;
+--如果是日期Date格式,进行统一 To_char格式转型
+
+ 4. v_sqlStmt := v_sqlStmt || ' ,' || v_column || ' AS "' || v_mappName || '" ';
+--动态拼接sql,同时对于映射字段前后加 " 双引号,防止返回Map时字段强制大写
+
+5. open cursor_ref for --打开动态游标存储查询数据
+    	v_sqlStmt;
+--打开动态游标存储查询数据
+
+2.3 查询表数据准备
+
+CREATE TABLE emp(
+	empno NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
+    ename VARCHAR2(10),
+    job VARCHAR2(15),
+    mgr NUMBER(4),
+    hiredate DATE,
+    sal NUMBER(7,2),
+    comm NUMBER(7,2),
+    deptno NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT
+ );
+
+INSERT INTO emp VALUES(7369,'SMITH','CLERK',7902,to_date('17-12-1980','dd-mm-yyyy'),800,NULL,20);
+INSERT INTO emp VALUES(7499,'ALLEN','SALESMAN',7698,to_date('20-2-1981','dd-mm-yyyy'),1600,300,30);
+INSERT INTO emp VALUES(7521,'WARD','SALESMAN',7698,to_date('22-2-1981','dd-mm-yyyy'),1250,500,30);
+INSERT INTO emp VALUES(7566,'JONES','MANAGER',7839,to_date('2-4-1981','dd-mm-yyyy'),2975,NULL,20);
+INSERT INTO emp VALUES(7654,'MARTIN','SALESMAN',7698,to_date('28-9-1981','dd-mm-yyyy'),1250,1400,30);
+INSERT INTO emp VALUES(7698,'BLAKE','MANAGER',7839,to_date('1-5-1981','dd-mm-yyyy'),2850,NULL,30);
+INSERT INTO emp VALUES(7782,'CLARK','MANAGER',7839,to_date('9-6-1981','dd-mm-yyyy'),2450,NULL,10);
+INSERT INTO emp VALUES(7788,'SCOTT','ANALYST',7566,to_date('19-4-87','dd-mm-yyyy'),3000,NULL,20);
+INSERT INTO emp VALUES(7839,'KING','PRESIDENT',NULL,to_date('17-11-1981','dd-mm-yyyy'),5000,NULL,10);
+INSERT INTO emp VALUES(7844,'TURNER','SALESMAN',7698,to_date('8-9-1981','dd-mm-yyyy'),1500,0,30);
+INSERT INTO emp VALUES(7876,'ADAMS','CLERK',7788,to_date('23-5-87','dd-mm-yyyy'),1100,NULL,20);
+INSERT INTO emp VALUES(7900,'JAMES','CLERK',7698,to_date('3-12-1981','dd-mm-yyyy'),950,NULL,30);
+INSERT INTO emp VALUES(7902,'FORD','ANALYST',7566,to_date('3-12-1981','dd-mm-yyyy'),3000,NULL,20);
+INSERT INTO emp VALUES(7934,'MILLER','CLERK',7782,to_date('23-1-1982','dd-mm-yyyy'),1300,NULL,10);
+
+----------------operator----------------
+  CREATE TABLE operator(
+ ID NUMBER(4),
+ dates VARCHAR2(10),
+ equpment varchar2(10),
+ operators varchar2(10)
+)
+INSERT INTO OPERATOR VALUES(1,'301', 'd',  'jemy');
+insert into operator values( 2,'302', 'b', 'tony');
+insert into operator values( 3,'303', 'c', 'jemy');
+insert into operator values( 4,'304', 'a', 'tony');
+insert into operator values( 5,'305', 'c', 'jemy');
+INSERT INTO OPERATOR VALUES( 6,'306', 'a', 'jemy');
+INSERT INTO OPERATOR VALUES( 7,'307', 'a', 'tom' );
+2.4 sql中调用包查询数据
+
+declare
+return_cursor pkg_querySql.cursorRef; --定义接收返回数据集的变量
+tableName varchar2(20) := 'operator' ;   --定义接收table的变量
+id varchar2(20);   --定义接收id的变量
+dates varchar2(50);  --定义接收name的变量
+equpment varchar2(20);   --定义接收id的变量
+operators varchar2(50);  --定义接收name的变量
+begin
+pkg_querySql.querySqls(tableName,return_cursor);  --调用包中的存储过程返回游标引用
+loop fetch return_cursor into id,dates,equpment,operators; --循环获取游标中每一行的数据
+exit when return_cursor%notfound;          --游标结束时退出
+dbms_output.put_line('id:'||id||' dates:'||dates || ' equpment:'||equpment||' operators:'||operators); --将获取到的值打印出来
+end loop;    --循环结束
+close return_cursor;  --关闭游标
+end;
